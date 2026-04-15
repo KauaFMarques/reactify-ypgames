@@ -2,87 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 230 15% 96%;
+    --foreground: 220 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 20% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 20% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 239 84% 67%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Quiz-specific tokens */
+    --quiz-gradient: linear-gradient(135deg, hsl(233 80% 66%) 0%, hsl(271 55% 49%) 100%);
+    --quiz-success: 152 69% 31%;
+    --quiz-success-bg: 141 72% 92%;
+    --quiz-error: 0 72% 51%;
+    --quiz-error-bg: 0 86% 97%;
+    --quiz-warning-bg: 38 92% 95%;
+    --quiz-warning-text: 15 75% 28%;
+    --quiz-score: 239 84% 67%;
+    --quiz-team-bg: 226 100% 94%;
+    --quiz-team-text: 243 75% 41%;
+    --quiz-badge-bg: 45 93% 94%;
+    --quiz-badge-text: 28 80% 30%;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 84% 5%;
     --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
+    --card: 222 84% 5%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 84% 5%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 18%;
     --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 213 27% 84%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +97,104 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, sans-serif;
   }
+}
+
+@layer components {
+  .quiz-gradient-bg {
+    background: var(--quiz-gradient);
+  }
+
+  .quiz-card {
+    @apply bg-card rounded-2xl shadow-xl p-8;
+  }
+
+  .quiz-input {
+    @apply w-full px-4 py-3 border-2 border-border rounded-xl bg-card text-foreground transition-all duration-200 outline-none;
+  }
+
+  .quiz-input:focus {
+    @apply border-primary ring-2 ring-primary/20;
+  }
+
+  .quiz-btn-primary {
+    @apply w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 cursor-pointer border-none;
+    background: linear-gradient(135deg, hsl(var(--quiz-success)), hsl(152 69% 28%));
+    color: white;
+    box-shadow: 0 4px 15px hsl(var(--quiz-success) / 0.3);
+  }
+
+  .quiz-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px hsl(var(--quiz-success) / 0.4);
+  }
+
+  .quiz-btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .quiz-error-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: hsl(var(--quiz-error-bg));
+    color: hsl(var(--quiz-error));
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    border-left: 4px solid hsl(var(--quiz-error));
+  }
+
+  .answer-btn {
+    @apply flex justify-between items-center px-5 py-4 border-2 border-border rounded-xl bg-card cursor-pointer transition-all duration-200 text-left text-foreground;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    @apply border-primary;
+    background: hsl(var(--background));
+  }
+
+  .answer-btn.correct {
+    background: hsl(var(--quiz-success-bg));
+    border-color: hsl(var(--quiz-success));
+    color: hsl(152 69% 20%);
+  }
+
+  .answer-btn.incorrect {
+    background: hsl(var(--quiz-error-bg));
+    border-color: hsl(var(--quiz-error));
+    color: hsl(0 72% 30%);
+  }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 20%, 40%, 60%, 80% { transform: translateX(-2px); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
 }
