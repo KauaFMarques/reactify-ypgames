@@ -25,13 +25,15 @@ const Home = () => {
       const session = {
         team,
         teamId: body.id,
+        stage: 1,
         score: 0,
         finished: false,
         results: [],
       };
       localStorage.clear();
       localStorage.setItem(room, JSON.stringify(session));
-      navigate(`/${room}/play`);
+      // Vai para seleção de etapa antes de jogar
+      navigate(`/${room}/stage`);
     } catch (err: any) {
       setError(err.message || "Erro de conexão. Tente novamente.");
     } finally {
@@ -47,10 +49,10 @@ const Home = () => {
           <div className="text-6xl mb-3 bg-primary-foreground/20 rounded-full w-28 h-28 flex items-center justify-center backdrop-blur-md shadow-lg">
             🧠
           </div>
-          <h1 className="text-5xl font-extrabold drop-shadow-lg">QuizMaster</h1>
+          <h1 className="text-5xl font-extrabold drop-shadow-lg">AgileQuest</h1>
         </div>
         <p className="text-lg opacity-90 max-w-md mx-auto leading-relaxed">
-          Teste seus conhecimentos e compete com seus amigos!
+          Simulador gamificado de decisões em metodologia ágil
         </p>
       </div>
 
@@ -68,8 +70,8 @@ const Home = () => {
               <input
                 className="quiz-input"
                 value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                placeholder="Ex: ABC123"
+                onChange={(e) => setRoom(e.target.value.trim())}
+                placeholder="Ex: xK3mP7a"
                 disabled={isLoading}
               />
             </div>
@@ -80,7 +82,7 @@ const Home = () => {
                 className="quiz-input"
                 value={team}
                 onChange={(e) => setTeam(e.target.value)}
-                placeholder="Ex: Os Gênios"
+                placeholder="Ex: Os Ágeis"
                 disabled={isLoading}
               />
             </div>
@@ -121,7 +123,7 @@ const Home = () => {
             </div>
             <div className="flex-1 text-left">
               <h3 className="text-lg font-semibold m-0">Criar Nova Sala</h3>
-              <p className="m-0 opacity-80 text-sm">Seja o professor e crie uma nova sala de quiz</p>
+              <p className="m-0 opacity-80 text-sm">Seja o professor e crie uma sala com cenários</p>
             </div>
             <div className="text-xl opacity-70">→</div>
           </div>
@@ -132,9 +134,9 @@ const Home = () => {
       <div className="w-full max-w-3xl mt-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { icon: "⚡", title: "Rápido", desc: "Entre e comece a jogar em segundos" },
-            { icon: "🏆", title: "Competitivo", desc: "Compete com outras equipes em tempo real" },
-            { icon: "🎉", title: "Divertido", desc: "Perguntas interessantes e feedback imediato" },
+            { icon: "🧩", title: "Cenários reais", desc: "Tome decisões em situações ágeis realistas" },
+            { icon: "💬", title: "Feedback imediato", desc: "Aprenda com a explicação de cada decisão" },
+            { icon: "📈", title: "Evolução por etapa", desc: "Acompanhe seu progresso ao longo das semanas" },
           ].map((f) => (
             <div
               key={f.title}

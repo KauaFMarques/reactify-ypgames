@@ -1,52 +1,44 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 
-interface GameSession {
+// Shape do store de sessão do aluno
+export interface ResultEntry {
+  scenarioId: number;
+  choiceId: number;
+  isBest: boolean;
+  responseTimeMs: number;
+}
+
+export interface SessionStore {
   team: string;
-  teamId: string;
+  teamId: number;
+  stage: number;
   score: number;
   finished: boolean;
-  results: Array<{
-    questionId: number;
-    answerId: number;
-    correct: boolean;
-  }>;
+  results: ResultEntry[];
 }
 
 export function useLocalStorage(key: string) {
-  const [value, setValue] = useState<GameSession | null>(null);
+  const [value, setValue] = useState<SessionStore | null>(() => {
+    if (!key) return null;
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        setValue(JSON.parse(stored));
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [key]);
-
-  const save = useCallback(
-    (newValue: GameSession | null) => {
-      if (newValue) {
-        localStorage.setItem(key, JSON.stringify(newValue));
-      } else {
-        localStorage.removeItem(key);
-      }
+  const update = useCallback(
+    (updater: (prev: SessionStore) => SessionStore) => {
+      setValue((prev) => {
+        if (!prev) return prev;
+        const next = updater(prev);
+        localStorage.setItem(key, JSON.stringify(next));
+        return next;
+      });
     },
     [key]
   );
 
-  const update = useCallback(
-    (updater: (prev: GameSession) => GameSession) => {
-      setValue((prev) => {
-        if (!prev) return prev;
-        const next = updater(prev);
-        save(next);
-        return next;
-      });
-    },
-    [save]
-  );
-
-  return { value, setValue: (v: GameSession) => { setValue(v); save(v); }, update };
+  return { value, update };
 }

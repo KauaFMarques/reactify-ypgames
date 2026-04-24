@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "./pages/Home";
 import CreateRoom from "./pages/CreateRoom";
+import StageSelect from "./pages/StageSelect";
 import Play from "./pages/Play";
 import Score from "./pages/Score";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/create" element={<CreateRoom />} />
+          <Route path="/:room/stage" element={<StageSelect />} />
           <Route path="/:room/play" element={<Play />} />
           <Route path="/:room/score" element={<Score />} />
           <Route path="*" element={<NotFound />} />
