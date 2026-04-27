@@ -25,15 +25,13 @@ const Home = () => {
       const session = {
         team,
         teamId: body.id,
-        stage: 1,
         score: 0,
         finished: false,
         results: [],
       };
       localStorage.clear();
       localStorage.setItem(room, JSON.stringify(session));
-      // Vai para seleção de etapa antes de jogar
-      navigate(`/${room}/stage`);
+      navigate(`/${room}/play`);
     } catch (err: any) {
       setError(err.message || "Erro de conexão. Tente novamente.");
     } finally {
@@ -59,14 +57,18 @@ const Home = () => {
       {/* Join Card */}
       <div className="w-full max-w-md mb-10">
         <div className="quiz-card text-center">
-          <h2 className="text-foreground mb-2 text-2xl font-semibold">🎯 Entrar no Jogo</h2>
+          <h2 className="text-foreground mb-2 text-2xl font-semibold">
+            🎯 Entrar no Jogo
+          </h2>
           <p className="text-muted-foreground mb-8 leading-relaxed">
             Digite o código da sala e o nome da sua equipe para começar
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="text-left">
-              <label className="block text-sm font-semibold text-foreground mb-2">Código da Sala</label>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Código da Sala
+              </label>
               <input
                 className="quiz-input"
                 value={room}
@@ -77,7 +79,9 @@ const Home = () => {
             </div>
 
             <div className="text-left">
-              <label className="block text-sm font-semibold text-foreground mb-2">Nome da Equipe</label>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Nome da Equipe
+              </label>
               <input
                 className="quiz-input"
                 value={team}
@@ -94,7 +98,11 @@ const Home = () => {
               </div>
             )}
 
-            <button type="submit" className="quiz-btn-primary" disabled={isLoading}>
+            <button
+              type="submit"
+              className="quiz-btn-primary"
+              disabled={isLoading}
+            >
               {isLoading ? "Entrando..." : "🚀 Entrar na Sala"}
             </button>
           </form>
@@ -114,7 +122,10 @@ const Home = () => {
       <div className="w-full max-w-md mb-10">
         <a
           href="/create"
-          onClick={(e) => { e.preventDefault(); navigate("/create"); }}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/create");
+          }}
           className="block no-underline"
         >
           <div className="bg-primary-foreground/10 backdrop-blur-md border-2 border-primary-foreground/20 rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 cursor-pointer text-primary-foreground hover:bg-primary-foreground/20 hover:-translate-y-0.5 hover:shadow-lg">
@@ -123,7 +134,9 @@ const Home = () => {
             </div>
             <div className="flex-1 text-left">
               <h3 className="text-lg font-semibold m-0">Criar Nova Sala</h3>
-              <p className="m-0 opacity-80 text-sm">Seja o professor e crie uma sala com cenários</p>
+              <p className="m-0 opacity-80 text-sm">
+                Seja o professor e crie uma sala com cenários
+              </p>
             </div>
             <div className="text-xl opacity-70">→</div>
           </div>
@@ -134,9 +147,21 @@ const Home = () => {
       <div className="w-full max-w-3xl mt-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { icon: "🧩", title: "Cenários reais", desc: "Tome decisões em situações ágeis realistas" },
-            { icon: "💬", title: "Feedback imediato", desc: "Aprenda com a explicação de cada decisão" },
-            { icon: "📈", title: "Evolução por etapa", desc: "Acompanhe seu progresso ao longo das semanas" },
+            {
+              icon: "🧩",
+              title: "Cenários reais",
+              desc: "Tome decisões em situações ágeis realistas",
+            },
+            {
+              icon: "💬",
+              title: "Feedback imediato",
+              desc: "Aprenda com a explicação de cada decisão",
+            },
+            {
+              icon: "📈",
+              title: "Progresso em tempo real",
+              desc: "Acompanhe seu desempenho ao longo das perguntas",
+            },
           ].map((f) => (
             <div
               key={f.title}

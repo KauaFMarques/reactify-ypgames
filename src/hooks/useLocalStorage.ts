@@ -11,7 +11,6 @@ export interface ResultEntry {
 export interface SessionStore {
   team: string;
   teamId: number;
-  stage: number;
   score: number;
   finished: boolean;
   results: ResultEntry[];
@@ -37,7 +36,7 @@ export function useLocalStorage(key: string) {
         return next;
       });
     },
-    [key]
+    [key],
   );
 
   return { value, update };
