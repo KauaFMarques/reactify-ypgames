@@ -10,12 +10,9 @@ const Play = () => {
   const navigate = useNavigate();
   const { value: store, update } = useLocalStorage(room || "");
 
-  // Etapa atual — salva no localStorage junto com o store
-  const stage = store?.stage ?? 1;
-
   const { data: scenarios, isLoading } = useQuery({
-    queryKey: ["scenarios", room, stage],
-    queryFn: () => fetchScenarios(room!, stage),
+    queryKey: ["scenarios", room],
+    queryFn: () => fetchScenarios(room!),
     enabled: !!room,
     retry: false,
   });
@@ -54,7 +51,12 @@ const Play = () => {
     const elapsed = Date.now() - startTimeRef.current;
 
     try {
-      const res = await submitResponse(store.teamId, currentScenario.id, choiceId, elapsed);
+      const res = await submitResponse(
+        store.teamId,
+        currentScenario.id,
+        choiceId,
+        elapsed,
+      );
       setResult(res);
       setShowFeedback(true);
 
@@ -93,7 +95,9 @@ const Play = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground text-lg">Carregando cenários...</p>
+          <p className="text-muted-foreground text-lg">
+            Carregando cenários...
+          </p>
         </div>
       </div>
     );
@@ -107,11 +111,17 @@ const Play = () => {
           <h2 className="text-2xl font-bold text-foreground">
             Parabéns, {store.team}!
           </h2>
-          <p className="text-muted-foreground mt-2">Você completou todos os cenários da etapa {stage}.</p>
+          <p className="text-muted-foreground mt-2">
+            Você completou todos os cenários da sala.
+          </p>
           <div className="my-6 p-5 bg-muted rounded-2xl flex flex-col items-center gap-1">
-            <span className="text-muted-foreground text-sm">Melhores decisões</span>
+            <span className="text-muted-foreground text-sm">
+              Melhores decisões
+            </span>
             <strong className="text-5xl text-primary">{store.score}</strong>
-            <span className="text-muted-foreground text-sm">de {scenarios?.length ?? 0} cenários</span>
+            <span className="text-muted-foreground text-sm">
+              de {scenarios?.length ?? 0} cenários
+            </span>
           </div>
           <button
             onClick={() => navigate(`/${room}/score`)}
@@ -131,20 +141,20 @@ const Play = () => {
         <div className="flex justify-between mb-4">
           <span
             className="px-4 py-2 rounded-full font-bold text-sm"
-            style={{ background: "hsl(var(--quiz-team-bg))", color: "hsl(var(--quiz-team-text))" }}
+            style={{
+              background: "hsl(var(--quiz-team-bg))",
+              color: "hsl(var(--quiz-team-text))",
+            }}
           >
             👥 {store.team}
           </span>
           <div className="flex gap-2">
             <span
               className="px-4 py-2 rounded-full font-bold text-sm"
-              style={{ background: "hsl(var(--quiz-badge-bg))", color: "hsl(var(--quiz-badge-text))" }}
-            >
-              📅 Etapa {stage}
-            </span>
-            <span
-              className="px-4 py-2 rounded-full font-bold text-sm"
-              style={{ background: "hsl(var(--quiz-team-bg))", color: "hsl(var(--quiz-team-text))" }}
+              style={{
+                background: "hsl(var(--quiz-badge-bg))",
+                color: "hsl(var(--quiz-badge-text))",
+              }}
             >
               🎯 {store.score} pts
             </span>
@@ -152,13 +162,18 @@ const Play = () => {
         </div>
         <div>
           <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>Cenário {store.results.length + 1} de {scenarios?.length ?? "?"}</span>
+            <span>
+              Cenário {store.results.length + 1} de {scenarios?.length ?? "?"}
+            </span>
             <span>{progress}%</span>
           </div>
           <div className="h-2 bg-muted rounded overflow-hidden">
             <div
               className="h-full rounded transition-all duration-500"
-              style={{ width: `${progress}%`, background: "hsl(var(--quiz-success))" }}
+              style={{
+                width: `${progress}%`,
+                background: "hsl(var(--quiz-success))",
+              }}
             />
           </div>
         </div>
@@ -166,7 +181,9 @@ const Play = () => {
 
       {/* Cenário */}
       {currentScenario && (
-        <div className={`quiz-card transition-all duration-300 ${showFeedback ? "opacity-50 pointer-events-none" : ""}`}>
+        <div
+          className={`quiz-card transition-all duration-300 ${showFeedback ? "opacity-50 pointer-events-none" : ""}`}
+        >
           {/* Título do cenário */}
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
@@ -176,10 +193,14 @@ const Play = () => {
 
           {/* Descrição / contexto */}
           <div className="bg-muted rounded-xl p-4 mb-6 border-l-4 border-primary">
-            <p className="text-foreground leading-relaxed">{currentScenario.description}</p>
+            <p className="text-foreground leading-relaxed">
+              {currentScenario.description}
+            </p>
           </div>
 
-          <p className="text-sm font-semibold text-muted-foreground mb-3">❓ O que você faz?</p>
+          <p className="text-sm font-semibold text-muted-foreground mb-3">
+            ❓ O que você faz?
+          </p>
 
           {/* Opções */}
           <div className="flex flex-col gap-3">
@@ -187,7 +208,8 @@ const Play = () => {
               const letters = ["A", "B", "C", "D"];
               const isSelected = selectedChoice === choice.id;
               const isBestChoice = isSelected && result?.is_best;
-              const isWrongChoice = isSelected && result !== null && !result.is_best;
+              const isWrongChoice =
+                isSelected && result !== null && !result.is_best;
 
               return (
                 <button
@@ -203,7 +225,9 @@ const Play = () => {
                     {choice.text}
                   </span>
                   {showFeedback && isSelected && (
-                    <span className="text-lg">{isBestChoice ? "✅" : "❌"}</span>
+                    <span className="text-lg">
+                      {isBestChoice ? "✅" : "❌"}
+                    </span>
                   )}
                 </button>
               );
@@ -221,15 +245,21 @@ const Play = () => {
               {result.is_best ? "Melhor decisão!" : "Não foi a melhor opção"}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {result.is_best ? "Você tomou a decisão mais adequada." : "Veja o que seria mais indicado:"}
+              {result.is_best
+                ? "Você tomou a decisão mais adequada."
+                : "Veja o que seria mais indicado:"}
             </p>
 
             {/* Feedback explicativo — coração do novo sistema */}
             <div
               className="rounded-xl p-4 mb-6 text-left text-sm leading-relaxed"
               style={{
-                background: result.is_best ? "hsl(var(--quiz-success-bg))" : "hsl(var(--quiz-warning-bg))",
-                color: result.is_best ? "hsl(152 69% 20%)" : "hsl(var(--quiz-warning-text))",
+                background: result.is_best
+                  ? "hsl(var(--quiz-success-bg))"
+                  : "hsl(var(--quiz-warning-bg))",
+                color: result.is_best
+                  ? "hsl(152 69% 20%)"
+                  : "hsl(var(--quiz-warning-text))",
                 borderLeft: `4px solid ${result.is_best ? "hsl(var(--quiz-success))" : "hsl(38 92% 60%)"}`,
               }}
             >
@@ -238,13 +268,11 @@ const Play = () => {
             </div>
 
             <div className="text-sm text-muted-foreground mb-5">
-              Pontuação atual: <strong className="text-primary">{result.score} pts</strong>
+              Pontuação atual:{" "}
+              <strong className="text-primary">{result.score} pts</strong>
             </div>
 
-            <button
-              onClick={goToNext}
-              className="quiz-btn-primary"
-            >
+            <button onClick={goToNext} className="quiz-btn-primary">
               {store && scenarios && store.results.length >= scenarios.length
                 ? "Ver resultado final 🏆"
                 : "Próximo cenário →"}

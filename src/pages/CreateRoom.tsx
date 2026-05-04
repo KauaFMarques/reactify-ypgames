@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createRoom, createStage, createScenario } from "@/lib/api";
-import type { CreateChoiceInput } from "@/lib/api";
+import { createRoom, createScenario } from "@/lib/api";
+import type { CreateChoiceInput, CreateScenarioInput } from "@/lib/api";
 
 // ─── Tipos locais ─────────────────────────────────────────────────────────────
 
@@ -19,7 +19,11 @@ interface ScenarioDraft {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const emptyChoice = (): ChoiceDraft => ({ text: "", is_best: false, feedback: "" });
+const emptyChoice = (): ChoiceDraft => ({
+  text: "",
+  is_best: false,
+  feedback: "",
+});
 const emptyScenario = (): ScenarioDraft => ({
   title: "",
   description: "",
@@ -28,47 +32,35 @@ const emptyScenario = (): ScenarioDraft => ({
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-type Step = "room" | "scenarios" | "done";
-
 const CreateRoom = () => {
   const navigate = useNavigate();
-
-  // Passo atual do wizard
-  const [step, setStep] = useState<Step>("room");
 
   // Dados da sala
   const [prof, setProf] = useState("");
   const [roomName, setRoomName] = useState("");
-  const [totalStages, setTotalStages] = useState(3);
-
-  // Cenários por etapa: { 1: [...], 2: [...], 3: [...] }
-  const [scenariosByStage, setScenariosByStage] = useState<Record<number, ScenarioDraft[]>>({
-    1: [emptyScenario()],
-  });
-  const [currentStage, setCurrentStage] = useState(1);
+  const [scenarios, setScenarios] = useState<ScenarioDraft[]>([
+    emptyScenario(),
+  ]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [roomId, setRoomId] = useState("");
 
-  // ─── Passo 1: Criar sala ────────────────────────────────────────────────────
+  // ─── Sala e cenários ────────────────────────────────────────────────────────
 
   async function handleCreateRoom(e: React.FormEvent) {
     e.preventDefault();
-    if (!prof || !roomName) { setError("Preencha todos os campos"); return; }
+    if (!prof || !roomName) {
+      setError("Preencha todos os campos");
+      return;
+    }
 
     setIsLoading(true);
     setError("");
     try {
       const data = await createRoom(prof, roomName);
       setRoomId(data.id);
-
-      // Inicializa arrays de cenários para todas as etapas
-      const initial: Record<number, ScenarioDraft[]> = {};
-      for (let i = 1; i <= totalStages; i++) initial[i] = [emptyScenario()];
-      setScenariosByStage(initial);
-
-      setStep("scenarios");
+      setScenarios([emptyScenario()]);
     } catch (err: any) {
       setError(err.message || "Erro ao criar sala.");
     } finally {
@@ -76,42 +68,44 @@ const CreateRoom = () => {
     }
   }
 
-  // ─── Passo 2: Cenários ──────────────────────────────────────────────────────
-
-  function updateScenario(stageNum: number, idx: number, field: keyof ScenarioDraft, value: any) {
-    setScenariosByStage((prev) => {
-      const updated = [...prev[stageNum]];
+  function updateScenario(idx: number, field: keyof ScenarioDraft, value: any) {
+    setScenarios((prev) => {
+      const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: value };
-      return { ...prev, [stageNum]: updated };
+      return updated;
     });
   }
 
-  function updateChoice(stageNum: number, sIdx: number, cIdx: number, field: keyof ChoiceDraft, value: any) {
-    setScenariosByStage((prev) => {
-      const updated = [...prev[stageNum]];
+  function updateChoice(
+    sIdx: number,
+    cIdx: number,
+    field: keyof ChoiceDraft,
+    value: any,
+  ) {
+    setScenarios((prev) => {
+      const updated = [...prev];
       const choices = [...updated[sIdx].choices];
       // Se marcando is_best, desmarca as outras
       if (field === "is_best" && value === true) {
-        choices.forEach((c, i) => { choices[i] = { ...c, is_best: i === cIdx }; });
+        choices.forEach((c, i) => {
+          choices[i] = { ...c, is_best: i === cIdx };
+        });
       } else {
         choices[cIdx] = { ...choices[cIdx], [field]: value };
       }
       updated[sIdx] = { ...updated[sIdx], choices };
-      return { ...prev, [stageNum]: updated };
+      return updated;
     });
   }
 
-  function addScenario(stageNum: number) {
-    setScenariosByStage((prev) => ({
-      ...prev,
-      [stageNum]: [...prev[stageNum], emptyScenario()],
-    }));
+  function addScenario() {
+    setScenarios((prev) => [...prev, emptyScenario()]);
   }
 
-  function removeScenario(stageNum: number, idx: number) {
-    setScenariosByStage((prev) => {
-      const updated = prev[stageNum].filter((_, i) => i !== idx);
-      return { ...prev, [stageNum]: updated.length > 0 ? updated : [emptyScenario()] };
+  function removeScenario(idx: number) {
+    setScenarios((prev) => {
+      const updated = prev.filter((_, i) => i !== idx);
+      return updated.length > 0 ? updated : [emptyScenario()];
     });
   }
 
@@ -121,39 +115,63 @@ const CreateRoom = () => {
     setError("");
 
     try {
-      // Cria uma stage para cada etapa e depois os cenários
-      for (let s = 1; s <= totalStages; s++) {
-        const stageLabels: Record<number, string> = {
-          1: "Semana 1 — Primeiro contato",
-          2: "Semana 2 — Nova rodada",
-          3: "Semana 3 — Rodada final",
-          4: "Semana 4 — Questionário de percepção",
-        };
-        await createStage(roomId, s, stageLabels[s] ?? `Etapa ${s}`);
+      const payloads: CreateScenarioInput[] = scenarios
+        .map((sc, idx) => {
+          // Validar: título é obrigatório
+          if (!sc.title.trim()) {
+            console.log(
+              `[CreateRoom] Pergunta ${idx + 1} rejeitada: título vazio`,
+            );
+            return null;
+          }
 
-        const scenarios = scenariosByStage[s] ?? [];
-        for (let idx = 0; idx < scenarios.length; idx++) {
-          const sc = scenarios[idx];
-          if (!sc.title || !sc.description) continue; // pula incompletos
-
+          // Filtrar choices com texto
           const choices: CreateChoiceInput[] = sc.choices
-            .filter((c) => c.text)
-            .map((c) => ({ text: c.text, is_best: c.is_best, feedback: c.feedback }));
+            .filter((c) => c.text.trim())
+            .map((c) => ({
+              text: c.text,
+              is_best: c.is_best,
+              feedback: c.feedback,
+            }));
 
-          if (choices.length < 2) continue;
+          // Validar: mínimo 2 choices com texto
+          if (choices.length < 2) {
+            console.log(
+              `[CreateRoom] Pergunta ${idx + 1} rejeitada: apenas ${choices.length} opção(ões) com texto`,
+            );
+            return null;
+          }
 
-          await createScenario({
+          // Validar: deve ter exatamente 1 resposta marcada como melhor
+          const bestCount = choices.filter((c) => c.is_best).length;
+          if (bestCount !== 1) {
+            console.log(
+              `[CreateRoom] Pergunta ${idx + 1} rejeitada: ${bestCount} resposta(s) marcada(s) como melhor (deve ser 1)`,
+            );
+            return null;
+          }
+
+          return {
             room: roomId,
-            stage: s,
-            title: sc.title,
-            description: sc.description,
+            title: sc.title.trim(),
+            description: sc.description.trim() || "Sem Descrição",
             order_index: idx,
             choices,
-          });
-        }
+          };
+        })
+        .filter((payload): payload is CreateScenarioInput => payload !== null);
+
+      if (payloads.length === 0) {
+        setError("Adicione pelo menos uma pergunta completa antes de salvar.");
+        return;
       }
 
-      setStep("done");
+      console.log(
+        `[CreateRoom] Enviando ${payloads.length} pergunta(s) em lote:`,
+        payloads,
+      );
+      await createScenario(payloads);
+      navigate(`/${roomId}/score`);
     } catch (err: any) {
       setError(err.message || "Erro ao salvar cenários.");
     } finally {
@@ -161,133 +179,92 @@ const CreateRoom = () => {
     }
   }
 
-  const stageScenarios = scenariosByStage[currentStage] ?? [];
-
   // ─── Renderização ────────────────────────────────────────────────────────────
-
-  if (step === "done") {
-    return (
-      <div className="min-h-screen quiz-gradient-bg flex items-center justify-center p-5">
-        <div className="quiz-card text-center max-w-md w-full animate-scaleIn">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Sala criada com sucesso!</h2>
-          <p className="text-muted-foreground mb-6">
-            Compartilhe o código abaixo com os alunos:
-          </p>
-          <div className="bg-muted rounded-2xl p-6 mb-6">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Código da sala</p>
-            <p className="text-4xl font-extrabold text-primary tracking-wider">{roomId}</p>
-          </div>
-          <button
-            onClick={() => navigate(`/${roomId}/score`)}
-            className="quiz-btn-primary"
-          >
-            Abrir placar →
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen quiz-gradient-bg p-5">
       <div className="max-w-3xl mx-auto animate-fadeInUp">
-
         {/* Header */}
         <div className="text-center mb-8">
           <button
-            onClick={() => step === "scenarios" ? setStep("room") : navigate("/")}
+            onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 text-primary-foreground font-medium px-4 py-2 rounded-lg bg-primary-foreground/20 hover:bg-primary-foreground/30 transition-all duration-300 border-none cursor-pointer mb-4"
           >
             ← Voltar
           </button>
           <h1 className="text-3xl font-bold text-primary-foreground">
-            {step === "room" ? "🏫 Criar Nova Sala" : "🧩 Cadastrar Cenários"}
+            🏫 Criar Nova Sala
           </h1>
           <p className="text-primary-foreground/80 mt-2">
-            {step === "room"
-              ? "Configure sua sala e defina o número de etapas"
-              : `Sala: ${roomId} — crie os cenários para cada etapa`}
+            {roomId
+              ? `Sala: ${roomId} — cadastre as perguntas abaixo`
+              : "Configure sua sala e cadastre as perguntas"}
           </p>
         </div>
 
-        {/* ── PASSO 1: Dados da sala ── */}
-        {step === "room" && (
-          <div className="quiz-card">
-            <form onSubmit={handleCreateRoom} className="flex flex-col gap-5">
-              <div className="text-left">
-                <label className="block text-sm font-semibold text-foreground mb-2">Nome da sala</label>
-                <input
-                  className="quiz-input"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                  placeholder="Ex: Turma de ES — 2025.1"
-                />
-              </div>
-              <div className="text-left">
-                <label className="block text-sm font-semibold text-foreground mb-2">Nome do professor</label>
-                <input
-                  className="quiz-input"
-                  value={prof}
-                  onChange={(e) => setProf(e.target.value)}
-                  placeholder="Seu nome"
-                />
-              </div>
-              <div className="text-left">
-                <label className="block text-sm font-semibold text-foreground mb-2">Número de etapas (semanas)</label>
-                <select
-                  className="quiz-input"
-                  value={totalStages}
-                  onChange={(e) => setTotalStages(Number(e.target.value))}
-                >
-                  {[2, 3, 4].map((n) => (
-                    <option key={n} value={n}>{n} etapas</option>
-                  ))}
-                </select>
-              </div>
-
-              {error && <div className="quiz-error-box">⚠️ {error}</div>}
-
-              <button type="submit" className="quiz-btn-primary" disabled={isLoading}>
-                {isLoading ? "Criando..." : "Criar sala e continuar →"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* ── PASSO 2: Cenários ── */}
-        {step === "scenarios" && (
-          <form onSubmit={handleSubmitAll}>
-            {/* Seletor de etapa */}
-            <div className="flex gap-2 mb-6 flex-wrap justify-center">
-              {Array.from({ length: totalStages }, (_, i) => i + 1).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setCurrentStage(s)}
-                  className={`px-5 py-2 rounded-full font-semibold text-sm border-2 transition-all duration-200 cursor-pointer ${
-                    currentStage === s
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/30"
-                  }`}
-                >
-                  Etapa {s}
-                </button>
-              ))}
+        <div className="quiz-card mb-6">
+          <form onSubmit={handleCreateRoom} className="flex flex-col gap-5">
+            <div className="text-left">
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Nome da sala
+              </label>
+              <input
+                className="quiz-input"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                placeholder="Ex: Turma de ES — 2025.1"
+                disabled={isLoading || !!roomId}
+              />
+            </div>
+            <div className="text-left">
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Nome do professor
+              </label>
+              <input
+                className="quiz-input"
+                value={prof}
+                onChange={(e) => setProf(e.target.value)}
+                placeholder="Seu nome"
+                disabled={isLoading || !!roomId}
+              />
             </div>
 
-            {/* Cenários da etapa atual */}
+            {error && <div className="quiz-error-box">⚠️ {error}</div>}
+
+            {!roomId ? (
+              <button
+                type="submit"
+                className="quiz-btn-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? "Criando..." : "Criar sala"}
+              </button>
+            ) : (
+              <div className="bg-muted rounded-2xl p-6 text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
+                  Código da sala
+                </p>
+                <p className="text-4xl font-extrabold text-primary tracking-wider">
+                  {roomId}
+                </p>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {roomId && (
+          <form onSubmit={handleSubmitAll}>
             <div className="flex flex-col gap-6">
-              {stageScenarios.map((scenario, sIdx) => (
+              {scenarios.map((scenario, sIdx) => (
                 <div key={sIdx} className="quiz-card">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-foreground text-lg">
-                      🧩 Cenário {sIdx + 1} — Etapa {currentStage}
+                      🧩 Pergunta {sIdx + 1}
                     </h3>
-                    {stageScenarios.length > 1 && (
+                    {scenarios.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeScenario(currentStage, sIdx)}
+                        onClick={() => removeScenario(sIdx)}
                         className="text-destructive text-sm font-medium bg-destructive/10 px-3 py-1 rounded-lg border-none cursor-pointer hover:bg-destructive/20"
                       >
                         Remover
@@ -297,29 +274,39 @@ const CreateRoom = () => {
 
                   <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-foreground mb-1">Título do cenário</label>
+                      <label className="block text-sm font-semibold text-foreground mb-1">
+                        Título da pergunta
+                      </label>
                       <input
                         className="quiz-input"
                         value={scenario.title}
-                        onChange={(e) => updateScenario(currentStage, sIdx, "title", e.target.value)}
-                        placeholder="Ex: Mudança durante a Sprint"
+                        onChange={(e) =>
+                          updateScenario(sIdx, "title", e.target.value)
+                        }
+                        placeholder="Ex: Mudança durante a sprint"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-foreground mb-1">Descrição / contexto</label>
+                      <label className="block text-sm font-semibold text-foreground mb-1">
+                        Descrição / contexto
+                      </label>
                       <textarea
                         className="quiz-input resize-none"
                         rows={3}
                         value={scenario.description}
-                        onChange={(e) => updateScenario(currentStage, sIdx, "description", e.target.value)}
+                        onChange={(e) =>
+                          updateScenario(sIdx, "description", e.target.value)
+                        }
                         placeholder="Ex: Durante a sprint, o cliente solicita uma nova funcionalidade urgente..."
                       />
                     </div>
 
-                    {/* Choices */}
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        Opções de escolha <span className="text-muted-foreground font-normal">(marque a melhor)</span>
+                        Opções de resposta{" "}
+                        <span className="text-muted-foreground font-normal">
+                          (marque a melhor)
+                        </span>
                       </label>
                       <div className="flex flex-col gap-3">
                         {scenario.choices.map((choice, cIdx) => {
@@ -328,7 +315,9 @@ const CreateRoom = () => {
                             <div
                               key={cIdx}
                               className={`border-2 rounded-xl p-4 transition-all duration-200 ${
-                                choice.is_best ? "border-green-400 bg-green-50" : "border-border bg-card"
+                                choice.is_best
+                                  ? "border-green-400 bg-green-50"
+                                  : "border-border bg-card"
                               }`}
                             >
                               <div className="flex items-center gap-3 mb-2">
@@ -338,15 +327,24 @@ const CreateRoom = () => {
                                 <input
                                   className="quiz-input flex-1"
                                   value={choice.text}
-                                  onChange={(e) => updateChoice(currentStage, sIdx, cIdx, "text", e.target.value)}
+                                  onChange={(e) =>
+                                    updateChoice(
+                                      sIdx,
+                                      cIdx,
+                                      "text",
+                                      e.target.value,
+                                    )
+                                  }
                                   placeholder={`Opção ${letters[cIdx]}`}
                                 />
                                 <label className="flex items-center gap-1 cursor-pointer text-sm font-semibold text-green-700 whitespace-nowrap">
                                   <input
                                     type="radio"
-                                    name={`best-${currentStage}-${sIdx}`}
+                                    name={`best-${sIdx}`}
                                     checked={choice.is_best}
-                                    onChange={() => updateChoice(currentStage, sIdx, cIdx, "is_best", true)}
+                                    onChange={() =>
+                                      updateChoice(sIdx, cIdx, "is_best", true)
+                                    }
                                     className="accent-green-500"
                                   />
                                   Melhor
@@ -356,7 +354,14 @@ const CreateRoom = () => {
                                 <input
                                   className="quiz-input text-sm"
                                   value={choice.feedback}
-                                  onChange={(e) => updateChoice(currentStage, sIdx, cIdx, "feedback", e.target.value)}
+                                  onChange={(e) =>
+                                    updateChoice(
+                                      sIdx,
+                                      cIdx,
+                                      "feedback",
+                                      e.target.value,
+                                    )
+                                  }
                                   placeholder="Explique por que esta é a melhor decisão..."
                                 />
                               )}
@@ -364,7 +369,14 @@ const CreateRoom = () => {
                                 <input
                                   className="quiz-input text-sm"
                                   value={choice.feedback}
-                                  onChange={(e) => updateChoice(currentStage, sIdx, cIdx, "feedback", e.target.value)}
+                                  onChange={(e) =>
+                                    updateChoice(
+                                      sIdx,
+                                      cIdx,
+                                      "feedback",
+                                      e.target.value,
+                                    )
+                                  }
                                   placeholder="Feedback para quem escolher esta opção..."
                                 />
                               )}
@@ -377,13 +389,12 @@ const CreateRoom = () => {
                 </div>
               ))}
 
-              {/* Adicionar cenário */}
               <button
                 type="button"
-                onClick={() => addScenario(currentStage)}
+                onClick={addScenario}
                 className="w-full py-4 border-2 border-dashed border-primary/40 rounded-2xl text-primary font-semibold hover:border-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer bg-transparent"
               >
-                + Adicionar cenário na Etapa {currentStage}
+                + Adicionar pergunta
               </button>
             </div>
 
@@ -392,9 +403,9 @@ const CreateRoom = () => {
             <button
               type="submit"
               className="quiz-btn-primary mt-6"
-              disabled={isLoading}
+              disabled={isLoading || !roomId}
             >
-              {isLoading ? "Salvando cenários..." : "✅ Salvar tudo e finalizar"}
+              {isLoading ? "Salvando perguntas..." : "✅ Salvar perguntas"}
             </button>
           </form>
         )}
