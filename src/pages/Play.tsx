@@ -22,23 +22,19 @@ const Play = () => {
   const [result, setResult] = useState<RespondResult | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  // Timer de resposta
   const startTimeRef = useRef<number>(Date.now());
   useEffect(() => {
     startTimeRef.current = Date.now();
   }, [store?.results?.length]);
 
   const currentScenario: Scenario | null = useMemo(() => {
-    if (store && scenarios) {
-      return scenarios[store.results.length] ?? null;
-    }
+    if (store && scenarios) return scenarios[store.results.length] ?? null;
     return null;
   }, [store, scenarios]);
 
   const progress = useMemo(() => {
-    if (store && scenarios && scenarios.length > 0) {
+    if (store && scenarios && scenarios.length > 0)
       return Math.round((store.results.length / scenarios.length) * 100);
-    }
     return 0;
   }, [store, scenarios]);
 
@@ -51,26 +47,12 @@ const Play = () => {
     const elapsed = Date.now() - startTimeRef.current;
 
     try {
-      const res = await submitResponse(
-        store.teamId,
-        currentScenario.id,
-        choiceId,
-        elapsed,
-      );
+      const res = await submitResponse(store.teamId, currentScenario.id, choiceId, elapsed);
       setResult(res);
       setShowFeedback(true);
-
       update((prev) => ({
         ...prev,
-        results: [
-          ...prev.results,
-          {
-            scenarioId: currentScenario.id,
-            choiceId,
-            isBest: res.is_best,
-            responseTimeMs: elapsed,
-          },
-        ],
+        results: [...prev.results, { scenarioId: currentScenario.id, choiceId, isBest: res.is_best, responseTimeMs: elapsed }],
         score: res.score,
       }));
     } catch (err) {
@@ -84,7 +66,6 @@ const Play = () => {
     setShowFeedback(false);
     setSelectedChoice(null);
     setResult(null);
-
     if (store && scenarios && store.results.length >= scenarios.length) {
       update((prev) => ({ ...prev, finished: true }));
     }
@@ -95,9 +76,7 @@ const Play = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground text-lg">
-            Carregando cenários...
-          </p>
+          <p className="text-muted-foreground text-lg">Carregando cenários...</p>
         </div>
       </div>
     );
@@ -108,25 +87,14 @@ const Play = () => {
       <div className="min-h-screen flex items-center justify-center quiz-gradient-bg p-5">
         <div className="quiz-card text-center max-w-md w-full animate-scaleIn">
           <div className="text-7xl mb-5">🏆</div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Parabéns, {store.team}!
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Você completou todos os cenários da sala.
-          </p>
+          <h2 className="text-2xl font-bold text-foreground">Parabéns, {store.team}!</h2>
+          <p className="text-muted-foreground mt-2">Você completou todos os cenários da sala.</p>
           <div className="my-6 p-5 bg-muted rounded-2xl flex flex-col items-center gap-1">
-            <span className="text-muted-foreground text-sm">
-              Melhores decisões
-            </span>
+            <span className="text-muted-foreground text-sm">Melhores decisões</span>
             <strong className="text-5xl text-primary">{store.score}</strong>
-            <span className="text-muted-foreground text-sm">
-              de {scenarios?.length ?? 0} cenários
-            </span>
+            <span className="text-muted-foreground text-sm">de {scenarios?.length ?? 0} cenários</span>
           </div>
-          <button
-            onClick={() => navigate(`/${room}/score`)}
-            className="quiz-btn-primary"
-          >
+          <button onClick={() => navigate(`/${room}/score`)} className="quiz-btn-primary">
             Ver Ranking Geral →
           </button>
         </div>
@@ -139,95 +107,85 @@ const Play = () => {
       {/* Header */}
       <header className="bg-card p-5 rounded-2xl shadow-md mb-6">
         <div className="flex justify-between mb-4">
-          <span
-            className="px-4 py-2 rounded-full font-bold text-sm"
-            style={{
-              background: "hsl(var(--quiz-team-bg))",
-              color: "hsl(var(--quiz-team-text))",
-            }}
-          >
-            👥 {store.team}
+          <span className="px-4 py-2 rounded-full font-bold text-sm" style={{ background: "hsl(var(--quiz-team-bg))", color: "hsl(var(--quiz-team-text))" }}>
+            🎓 {store.team}
           </span>
-          <div className="flex gap-2">
-            <span
-              className="px-4 py-2 rounded-full font-bold text-sm"
-              style={{
-                background: "hsl(var(--quiz-badge-bg))",
-                color: "hsl(var(--quiz-badge-text))",
-              }}
-            >
-              🎯 {store.score} pts
-            </span>
-          </div>
+          <span className="px-4 py-2 rounded-full font-bold text-sm" style={{ background: "hsl(var(--quiz-badge-bg))", color: "hsl(var(--quiz-badge-text))" }}>
+            🎯 {store.score} pts
+          </span>
         </div>
         <div>
           <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>
-              Cenário {store.results.length + 1} de {scenarios?.length ?? "?"}
-            </span>
+            <span>Cenário {store.results.length + 1} de {scenarios?.length ?? "?"}</span>
             <span>{progress}%</span>
           </div>
           <div className="h-2 bg-muted rounded overflow-hidden">
-            <div
-              className="h-full rounded transition-all duration-500"
-              style={{
-                width: `${progress}%`,
-                background: "hsl(var(--quiz-success))",
-              }}
-            />
+            <div className="h-full rounded transition-all duration-500" style={{ width: `${progress}%`, background: "hsl(var(--quiz-success))" }} />
           </div>
         </div>
       </header>
 
       {/* Cenário */}
       {currentScenario && (
-        <div
-          className={`quiz-card transition-all duration-300 ${showFeedback ? "opacity-50 pointer-events-none" : ""}`}
-        >
-          {/* Título do cenário */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-              🧩 {currentScenario.title}
-            </span>
+        <div className={`quiz-card transition-all duration-300 ${showFeedback ? "opacity-50 pointer-events-none" : ""}`}>
+
+          {/* ── Título grande e destacado ── */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+                🧩 Cenário {store.results.length + 1}
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold text-foreground leading-snug">
+              {currentScenario.title}
+            </h2>
           </div>
 
-          {/* Descrição / contexto */}
+          {/* ── Descrição / contexto ── */}
           <div className="bg-muted rounded-xl p-4 mb-6 border-l-4 border-primary">
-            <p className="text-foreground leading-relaxed">
+            <p className="text-foreground leading-relaxed text-base">
               {currentScenario.description}
             </p>
           </div>
 
-          <p className="text-sm font-semibold text-muted-foreground mb-3">
-            ❓ O que você faz?
-          </p>
+          <p className="text-sm font-semibold text-muted-foreground mb-3">❓ O que você faz?</p>
 
-          {/* Opções */}
+          {/* ── Opções ── */}
           <div className="flex flex-col gap-3">
             {currentScenario.choices.map((choice, idx) => {
               const letters = ["A", "B", "C", "D"];
               const isSelected = selectedChoice === choice.id;
               const isBestChoice = isSelected && result?.is_best;
-              const isWrongChoice =
-                isSelected && result !== null && !result.is_best;
+              const isWrongChoice = isSelected && result !== null && !result.is_best;
+
+              // Feedback visual enquanto processa: botão selecionado fica acinzentado com spinner
+              const isProcessing = isAnswering && isSelected;
 
               return (
                 <button
                   key={choice.id}
-                  className={`answer-btn ${isBestChoice ? "correct" : ""} ${isWrongChoice ? "incorrect" : ""}`}
+                  className={`answer-btn ${isBestChoice ? "correct" : ""} ${isWrongChoice ? "incorrect" : ""} ${isProcessing ? "opacity-70" : ""}`}
                   onClick={() => handleChoose(choice.id)}
                   disabled={showFeedback || isAnswering}
+                  style={isProcessing ? { cursor: "wait" } : {}}
                 >
                   <span className="flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
-                      {letters[idx]}
-                    </span>
+                    {/* Letra da opção — vira spinner enquanto processa */}
+                    {isProcessing ? (
+                      <span className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin flex-shrink-0" />
+                    ) : (
+                      <span className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
+                        {letters[idx]}
+                      </span>
+                    )}
                     {choice.text}
                   </span>
                   {showFeedback && isSelected && (
-                    <span className="text-lg">
-                      {isBestChoice ? "✅" : "❌"}
-                    </span>
+                    <span className="text-lg">{isBestChoice ? "✅" : "❌"}</span>
+                  )}
+                  {/* Texto "Aguarde..." visível só no botão que está sendo processado */}
+                  {isProcessing && (
+                    <span className="text-xs text-muted-foreground font-medium">Aguarde...</span>
                   )}
                 </button>
               );
@@ -245,33 +203,22 @@ const Play = () => {
               {result.is_best ? "Melhor decisão!" : "Não foi a melhor opção"}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {result.is_best
-                ? "Você tomou a decisão mais adequada."
-                : "Veja o que seria mais indicado:"}
+              {result.is_best ? "Você tomou a decisão mais adequada." : "Veja o que seria mais indicado:"}
             </p>
-
-            {/* Feedback explicativo — coração do novo sistema */}
             <div
               className="rounded-xl p-4 mb-6 text-left text-sm leading-relaxed"
               style={{
-                background: result.is_best
-                  ? "hsl(var(--quiz-success-bg))"
-                  : "hsl(var(--quiz-warning-bg))",
-                color: result.is_best
-                  ? "hsl(152 69% 20%)"
-                  : "hsl(var(--quiz-warning-text))",
+                background: result.is_best ? "hsl(var(--quiz-success-bg))" : "hsl(var(--quiz-warning-bg))",
+                color: result.is_best ? "hsl(152 69% 20%)" : "hsl(var(--quiz-warning-text))",
                 borderLeft: `4px solid ${result.is_best ? "hsl(var(--quiz-success))" : "hsl(38 92% 60%)"}`,
               }}
             >
               <strong className="block mb-1">💬 Explicação:</strong>
               {result.feedback}
             </div>
-
             <div className="text-sm text-muted-foreground mb-5">
-              Pontuação atual:{" "}
-              <strong className="text-primary">{result.score} pts</strong>
+              Pontuação atual: <strong className="text-primary">{result.score} pts</strong>
             </div>
-
             <button onClick={goToNext} className="quiz-btn-primary">
               {store && scenarios && store.results.length >= scenarios.length
                 ? "Ver resultado final 🏆"

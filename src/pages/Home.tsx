@@ -47,7 +47,7 @@ const Home = () => {
           <div className="text-6xl mb-3 bg-primary-foreground/20 rounded-full w-28 h-28 flex items-center justify-center backdrop-blur-md shadow-lg">
             🧠
           </div>
-          <h1 className="text-5xl font-extrabold drop-shadow-lg">AgileQuest</h1>
+          <h1 className="text-5xl font-extrabold drop-shadow-lg">YP-Game</h1>
         </div>
         <p className="text-lg opacity-90 max-w-md mx-auto leading-relaxed">
           Simulador gamificado de decisões em metodologia ágil
@@ -61,7 +61,7 @@ const Home = () => {
             🎯 Entrar no Jogo
           </h2>
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            Digite o código da sala e o nome da sua equipe para começar
+            Digite o código da sala e sua matrícula para começar
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -80,13 +80,13 @@ const Home = () => {
 
             <div className="text-left">
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Nome da Equipe
+                Matrícula
               </label>
               <input
                 className="quiz-input"
                 value={team}
-                onChange={(e) => setTeam(e.target.value)}
-                placeholder="Ex: Os Ágeis"
+                onChange={(e) => setTeam(e.target.value.trim())}
+                placeholder="Ex: 20240001"
                 disabled={isLoading}
               />
             </div>
@@ -122,21 +122,14 @@ const Home = () => {
       <div className="w-full max-w-md mb-10">
         <a
           href="/create"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate("/create");
-          }}
+          onClick={(e) => { e.preventDefault(); navigate("/create"); }}
           className="block no-underline"
         >
           <div className="bg-primary-foreground/10 backdrop-blur-md border-2 border-primary-foreground/20 rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 cursor-pointer text-primary-foreground hover:bg-primary-foreground/20 hover:-translate-y-0.5 hover:shadow-lg">
-            <div className="text-3xl bg-primary-foreground/20 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0">
-              ➕
-            </div>
+            <div className="text-3xl bg-primary-foreground/20 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0">➕</div>
             <div className="flex-1 text-left">
               <h3 className="text-lg font-semibold m-0">Criar Nova Sala</h3>
-              <p className="m-0 opacity-80 text-sm">
-                Seja o professor e crie uma sala com cenários
-              </p>
+              <p className="m-0 opacity-80 text-sm">Seja o professor e crie uma sala com cenários</p>
             </div>
             <div className="text-xl opacity-70">→</div>
           </div>
@@ -147,26 +140,11 @@ const Home = () => {
       <div className="w-full max-w-3xl mt-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            {
-              icon: "🧩",
-              title: "Cenários reais",
-              desc: "Tome decisões em situações ágeis realistas",
-            },
-            {
-              icon: "💬",
-              title: "Feedback imediato",
-              desc: "Aprenda com a explicação de cada decisão",
-            },
-            {
-              icon: "📈",
-              title: "Progresso em tempo real",
-              desc: "Acompanhe seu desempenho ao longo das perguntas",
-            },
+            { icon: "🧩", title: "Cenários reais", desc: "Tome decisões em situações ágeis realistas" },
+            { icon: "💬", title: "Feedback imediato", desc: "Aprenda com a explicação de cada decisão" },
+            { icon: "📈", title: "Progresso em tempo real", desc: "Acompanhe seu desempenho ao longo das perguntas" },
           ].map((f) => (
-            <div
-              key={f.title}
-              className="bg-primary-foreground/10 backdrop-blur-md rounded-2xl p-6 text-center text-primary-foreground transition-all duration-300 hover:-translate-y-1"
-            >
+            <div key={f.title} className="bg-primary-foreground/10 backdrop-blur-md rounded-2xl p-6 text-center text-primary-foreground transition-all duration-300 hover:-translate-y-1">
               <div className="text-3xl mb-3">{f.icon}</div>
               <h4 className="font-semibold text-lg mb-1">{f.title}</h4>
               <p className="opacity-80 text-sm">{f.desc}</p>
