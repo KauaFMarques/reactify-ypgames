@@ -47,7 +47,7 @@ const Home = () => {
           <div className="text-6xl mb-3 bg-primary-foreground/20 rounded-full w-28 h-28 flex items-center justify-center backdrop-blur-md shadow-lg">
             🧠
           </div>
-          <h1 className="text-5xl font-extrabold drop-shadow-lg">YP-Game</h1>
+          <h1 className="text-5xl font-extrabold drop-shadow-lg">Aglie_Quest</h1>
         </div>
         <p className="text-lg opacity-90 max-w-md mx-auto leading-relaxed">
           Simulador gamificado de decisões em metodologia ágil
@@ -125,7 +125,7 @@ const Home = () => {
           onClick={(e) => { e.preventDefault(); navigate("/create"); }}
           className="block no-underline"
         >
-          <div className="bg-primary-foreground/10 backdrop-blur-md border-2 border-primary-foreground/20 rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 cursor-pointer text-primary-foreground hover:bg-primary-foreground/20 hover:-translate-y-0.5 hover:shadow-lg">
+          <div className="bg-primary-foreground/10 backdrop-blur-md border-2 border-primary-foreground/20 rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 cursor-pointer text-primary-foreground hover:bg-primary-foreground/20">
             <div className="text-3xl bg-primary-foreground/20 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0">➕</div>
             <div className="flex-1 text-left">
               <h3 className="text-lg font-semibold m-0">Criar Nova Sala</h3>
