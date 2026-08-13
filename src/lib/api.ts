@@ -1,4 +1,4 @@
-const BASE_URL = "https://yp-game-backend2.onrender.com/";
+const BASE_URL = "https://yp-game-backend3.onrender.com/";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
